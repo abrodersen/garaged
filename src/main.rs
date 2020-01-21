@@ -21,7 +21,7 @@ fn main() {
 fn run() -> i32  {
     
     println!("initializing ionoPi");
-    if unsafe { ionoPiSetup() } != 0 {
+    if unsafe { ionoPiSetup() } == 0 {
         eprintln!("error: failed to initialize libionoPi");
         return 1;
     }
@@ -33,7 +33,7 @@ fn run() -> i32  {
     unsafe { ionoPiDigitalWrite(LED, OFF) };
     
     println!("registering for input changes");
-    if unsafe { ionoPiDigitalInterrupt(DI4, INT_EDGE_RISING, Some(digital_input_callback)) } != 0 {
+    if unsafe { ionoPiDigitalInterrupt(DI4, INT_EDGE_RISING, Some(digital_input_callback)) } == 0 {
         eprintln!("error: failed to create digital input interrupt");
         return 1;
     }
