@@ -41,19 +41,23 @@ struct Hardware {
 
 impl Hardware {
     fn init() -> Result<Hardware, Error> {
+        println!("initalizing led pin");
         let led_pin = Pin::new(7);
         led_pin.export()?;
         led_pin.set_direction(Direction::Low)?;
 
+        println!("initalizing relay pin");
         let relay_pin = Pin::new(17);
         relay_pin.export()?;
         relay_pin.set_direction(Direction::Low)?;
 
+        println!("initalizing status pin");
         let status_pin = Pin::new(6);
         status_pin.export()?;
         status_pin.set_direction(Direction::In)?;
         status_pin.set_edge(Edge::BothEdges)?;
 
+        println!("initalizing input pin");
         let input_pin = Pin::new(12);
         input_pin.export()?;
         input_pin.set_direction(Direction::In)?;
