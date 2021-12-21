@@ -152,7 +152,7 @@ async fn main() -> Result<(), Error>  {
     println!("publishing initial door state");
     let status = get_door_status(&hw)?;
     println!("initial door state = {}", status);
-    client.publish(&state_topic, QoS::AtLeastOnce, false, status.to_string()).await?;
+    client.publish(&state_topic, QoS::AtLeastOnce, true, status.to_string()).await?;
 
     println!("beginning monitor loop");
     loop {
@@ -162,7 +162,7 @@ async fn main() -> Result<(), Error>  {
                     Some(Ok(x)) => {
                         let status = parse_door_status(x);
                         println!("detected door status = {}", status);
-                        client.publish(&state_topic, QoS::AtLeastOnce, false, status.to_string()).await?;
+                        client.publish(&state_topic, QoS::AtLeastOnce, true, status.to_string()).await?;
                     },
                     Some(Err(e)) => return Err(e.into()),
                     None => break,
