@@ -78,6 +78,17 @@ impl Hardware {
     }
 }
 
+impl Drop for Hardware {
+    fn drop(&mut self) {
+        if let Some(led) = self.led {
+            let _ = led.unexport();
+        }
+        let _ = self.relay.unexport();
+        let _ = self.status.unexport();
+        let _ = self.input.unexport();
+    }
+}
+
 fn get_door_status(hw: &Hardware) -> Result<Status, Error> {
     hw.status.get_value()
         .map(parse_door_status)
@@ -139,8 +150,9 @@ async fn main() -> Result<(), Error>  {
     client.subscribe(&command_topic, QoS::ExactlyOnce).await?;
 
     println!("publishing initial door state");
-    let payload = get_door_status(&hw)?.to_string();
-    client.publish(&state_topic, QoS::AtLeastOnce, false, payload).await?;
+    let status = get_door_status(&hw)?;
+    println!("initial door state = {}", status);
+    client.publish(&state_topic, QoS::AtLeastOnce, false, status.to_string()).await?;
 
     println!("beginning monitor loop");
     loop {
@@ -159,7 +171,8 @@ async fn main() -> Result<(), Error>  {
             next_input = input_triggers.next() => {
                 match next_input {
                     Some(Ok(x)) if x != 0 => {
-                        println!("detected input trigger")
+                        println!("detected input trigger");
+                        trigger_relay(&hw).await?;
                     },
                     Some(Ok(_)) => (),
                     Some(Err(e)) => return Err(e.into()),
@@ -198,10 +211,12 @@ async fn main() -> Result<(), Error>  {
                 }
             },
             _ = tokio::signal::ctrl_c() => {
+                println!("shutdown signal received");
                 break;
             }
         }
     }
 
+    println!("exiting program");
     Ok(())
 }
