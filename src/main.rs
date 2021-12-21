@@ -32,7 +32,7 @@ enum Command {
 }
 
 struct Hardware {
-    led: Pin,
+    led: Option<Pin>,
     relay: Pin,
     status: Pin,
     input: Pin,
@@ -40,11 +40,16 @@ struct Hardware {
 }
 
 impl Hardware {
-    fn init() -> Result<Hardware, Error> {
-        println!("initalizing led pin");
-        let led_pin = Pin::new(7);
-        led_pin.export()?;
-        led_pin.set_direction(Direction::Low)?;
+    fn init(enable_led: bool) -> Result<Hardware, Error> {
+        let led_pin = if enable_led {
+            println!("initalizing led pin");
+            let led_pin = Pin::new(7);
+            led_pin.export()?;
+            led_pin.set_direction(Direction::Low)?;
+            Some(led_pin)
+        } else {
+            None
+        };
 
         println!("initalizing relay pin");
         let relay_pin = Pin::new(17);
@@ -89,18 +94,22 @@ fn parse_door_status(status: u8) -> Status {
 async fn trigger_relay(hw: &Hardware) -> Result<(), Error> {
     let _ = hw.lock.lock().await;
     println!("triggering door relay");
-    hw.led.set_value(1)?;
+    if let Some(led) = hw.led {
+        led.set_value(1)?;
+    }
     hw.relay.set_value(1)?;
     sleep(Duration::from_millis(200)).await;
     hw.relay.set_value(0)?;
-    hw.led.set_value(0)?;
+    if let Some(led) = hw.led {
+        led.set_value(0)?;
+    }
     Ok(())
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Error>  {
     println!("initializing gpio");
-    let hw = Hardware::init()?;
+    let hw = Hardware::init(false)?;
     let mut status_changes = hw.status.get_value_stream()?;
     let mut input_triggers = hw.input.get_value_stream()?;
 
