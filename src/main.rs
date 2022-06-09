@@ -13,7 +13,7 @@ use tokio::{time::sleep, sync::Mutex};
 
 use futures::StreamExt;
 
-use anyhow::Error;
+use anyhow::{Error, Context};
 
 #[derive(Debug, PartialEq, Display, EnumString)]
 enum Status {
@@ -164,7 +164,7 @@ async fn main() -> Result<(), Error>  {
                         println!("detected door status = {}", status);
                         client.publish(&state_topic, QoS::AtLeastOnce, true, status.to_string()).await?;
                     },
-                    Some(Err(e)) => return Err(e.into()),
+                    Some(Err(e)) => return Err(e).context("error reading door status events"),
                     None => break,
                 }
             },
@@ -175,12 +175,12 @@ async fn main() -> Result<(), Error>  {
                         trigger_relay(&hw).await?;
                     },
                     Some(Ok(_)) => (),
-                    Some(Err(e)) => return Err(e.into()),
+                    Some(Err(e)) => return Err(e).context("error reading input trigger events"),
                     None => break,
                 }
             },
             next_msg = event_loop.poll() => {
-                match next_msg? {
+                match next_msg.context("error reading mqtt events")? {
                     Event::Incoming(Incoming::Publish(packet)) => {
                         if packet.topic == command_topic {
                             let command = from_utf8(packet.payload.as_ref())
@@ -204,6 +204,8 @@ async fn main() -> Result<(), Error>  {
                                     println!("invalid command, ignoring");
                                 }
                             }
+                        } else {
+                            println!("unrecognized topic {}", packet.topic);
                         }
                         
                     },
