@@ -7,10 +7,10 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-futures = "0.3"
-tokio = { version = "1.15.0", features = ["full"] }
-sysfs_gpio = { version = "0.6", features = ["async-tokio"] }
-rumqttc = "0.10"
-anyhow = "1.0"
-serde_json = "1.0"
-strum = { version = "0.23", features = ["derive"] }
+futures = "0.3.21"
+tokio = { version = "1.19.2", features = ["full"] }
+sysfs_gpio = { version = "0.6.1", features = ["async-tokio"] }
+rumqttc = "0.12.0"
+anyhow = "1.0.57"
+serde_json = "1.0.81"
+strum = { version = "0.24.0", features = ["derive"] }
