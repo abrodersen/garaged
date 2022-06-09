@@ -125,7 +125,8 @@ async fn main() -> Result<(), Error>  {
     let mut input_triggers = hw.input.get_value_stream()?;
 
     println!("initializing mqtt");
-    let mut options = MqttOptions::new("garaged", "10.44.0.15", 1883);
+    let hostname = gethostname::gethostname().into_string().expect("failed to get hostname");
+    let mut options = MqttOptions::new(hostname, "10.44.0.15", 1883);
     options.set_keep_alive(Duration::from_secs(5));
 
     let mqtt_path = "homeassistant/cover/garage";
