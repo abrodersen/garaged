@@ -9,7 +9,8 @@ use rumqttc::{MqttOptions, AsyncClient, QoS, Event, Incoming};
 
 use serde_json::{json, to_vec};
 
-use tokio::{time::sleep, sync::Mutex};
+use tokio::time::{sleep, interval};
+use tokio::sync::Mutex;
 
 use futures::StreamExt;
 
@@ -155,9 +156,15 @@ async fn main() -> Result<(), Error>  {
     println!("initial door state = {}", status);
     client.publish(&state_topic, QoS::AtLeastOnce, true, status.to_string()).await?;
 
+    let mut timer = interval(Duration::from_secs(60));
+
     println!("beginning monitor loop");
     loop {
         tokio::select! {
+            _next_timer = timer.tick() => {
+                let status = get_door_status(&hw)?;
+                client.publish(&state_topic, QoS::AtLeastOnce, true, status.to_string()).await?;
+            },
             next_status = status_changes.next() => {
                 match next_status {
                     Some(Ok(x)) => {
