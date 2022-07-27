@@ -188,8 +188,8 @@ async fn main() -> Result<(), Error>  {
                 }
             },
             next_msg = event_loop.poll() => {
-                match next_msg.context("error reading mqtt events")? {
-                    Event::Incoming(Incoming::Publish(packet)) => {
+                match next_msg.context("error reading mqtt events") {
+                    Ok(Event::Incoming(Incoming::Publish(packet))) => {
                         if packet.topic == command_topic {
                             let command = from_utf8(packet.payload.as_ref())
                                 .map_err(Error::from)
@@ -217,6 +217,9 @@ async fn main() -> Result<(), Error>  {
                         }
                         
                     },
+                    Err(e) => {
+                        println!("mqtt error: {}", e);
+                    }
                     _ => (),
                 }
             },
